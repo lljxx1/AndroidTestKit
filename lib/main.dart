@@ -40,7 +40,19 @@ class _MyAppState extends State<MyApp> {
     } on PlatformException catch (e) {
       print(e);
     }
+  }
 
+  testGoHome() async {
+    try {
+      final bool result = await platform.invokeMethod('click', {
+        "x": 500,
+        "y": 20
+      });
+      print(result);
+      print("testGoHome=");
+    } on PlatformException catch (e) {
+      print(e);
+    }
   }
 
   @override
@@ -67,6 +79,10 @@ class _MyAppState extends State<MyApp> {
               RaisedButton(
                 child: const Text('Test App'),
                 onPressed: testLanuch,
+              ),
+              RaisedButton(
+                child: const Text('Test Click'),
+                onPressed: testGoHome,
               ),
               Center(
                 child: Text('JSContext response: $_jsContextResponse\n'),
@@ -179,13 +195,13 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   void initMicroService() async {
-    if (_microService == null) {
+//    if (_microService == null) {
       String uri;
 
       // Android doesn't allow dashes in the res/raw directory.
       //uri = "android.resource://io.jojodev.flutter.liquidcoreexample/raw/liquidcore_sample";
 //      uri = "@flutter_assets/Resources/liquidcore_sample.js";
-      uri = "http://192.168.1.8:8080/index.js";
+      uri = "http://192.168.31.211:8080/test.js";
 
       _microService = new MicroService(uri);
       await _microService.addEventListener('ready',
@@ -197,27 +213,27 @@ class _MyAppState extends State<MyApp> {
 
             print('ready '+uri);
             //_emit();
-          });
-      await _microService.addEventListener('pong',
-              (service, event, eventPayload) {
+      });
+
+
+      await _microService.addEventListener('sendClick', (service, event, eventPayload) {
+            // The service is ready.
             if (!mounted) {
               return;
             }
+            print('sendClick '+uri);
+            print(eventPayload);
+            platform.invokeMethod('click', {
+              "x": eventPayload['x'],
+              "y": eventPayload['y']
+            });
 
-            _setMicroServiceResponse(eventPayload['message']);
-          });
-      await _microService.addEventListener('object',
-              (service, event, eventPayload) {
-            if (!mounted) {
-              return;
-            }
+      });
 
-            print("received obj: $eventPayload | type: ${eventPayload.runtimeType}");
-          });
 
       // Start the service.
       await _microService.start();
-    }
+//    }
 
     if (_microService.isStarted) {
       _emit();
