@@ -13,6 +13,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.util.Log
 
 class MainActivity: FlutterActivity() {
 
@@ -22,11 +23,17 @@ class MainActivity: FlutterActivity() {
 
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this);
+
         MethodChannel(getFlutterView(), CHANNEL)
                     .setMethodCallHandler(object : MethodCallHandler {
                     override fun onMethodCall(call: MethodCall, result: Result) {
+
                         if (call.method.equals("launchPackage")) {
                             var app = call.argument<String>("appName") as String;
+                            var acs = MyAccessibilityService.instance;
+                            if(acs != null){
+                                Log.d("MainActivity", acs.rootInActiveWindow.childCount.toString());
+                            }
                             result.success(launchApp(app))
                         } else {
                             result.notImplemented()

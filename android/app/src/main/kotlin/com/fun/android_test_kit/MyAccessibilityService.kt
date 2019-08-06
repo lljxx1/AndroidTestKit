@@ -7,14 +7,18 @@ import android.view.accessibility.AccessibilityEvent
 class MyAccessibilityService: AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-
-        Log.d("MyAccessibilityService", "onAccessibilityEvent reived");
+        instance = this;
+        Log.d("MyAccessibilityService", "onAccessibilityEvent reived new");
         Log.d("MyAccessibilityService", event.toString());
 
     }
 
     override fun onInterrupt() {
         Log.d("MyAccessibilityService", "onInterrupt");
+    }
+
+    companion object {
+        var instance: AccessibilityService? = null;
     }
 
 }
