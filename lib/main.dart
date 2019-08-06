@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
 import 'package:flutter_liquidcore/liquidcore.dart';
 
 void main() {
@@ -24,9 +23,24 @@ class _MyAppState extends State<MyApp> {
   String _microServiceResponse = '<empty>';
   int _microServiceWorld = 0;
 
+  static const platform = const MethodChannel('samples.flutter.dev/startApp');
+
   @override
   void initState() {
     super.initState();
+  }
+
+  testLanuch() async {
+    try {
+      final bool result = await platform.invokeMethod('launchPackage', {
+        "appName": "微信"
+      });
+      print(result);
+      print("lanuch=");
+    } on PlatformException catch (e) {
+      print(e);
+    }
+
   }
 
   @override
@@ -49,6 +63,10 @@ class _MyAppState extends State<MyApp> {
               RaisedButton(
                 child: const Text('Execute JSContext'),
                 onPressed: _initializeJsContext,
+              ),
+              RaisedButton(
+                child: const Text('Test App'),
+                onPressed: testLanuch,
               ),
               Center(
                 child: Text('JSContext response: $_jsContextResponse\n'),

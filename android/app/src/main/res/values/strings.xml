@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MyAccessibilityService</string>
+    <string name="assist_name">TestKit</string>
+</resources>
