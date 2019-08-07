@@ -88,7 +88,7 @@ class MainActivity: FlutterActivity() {
                                     val data = JSONArray();
                                     nodes.forEach {
                                         val id = UUID.randomUUID().toString();
-                                        knowElements.put(id, it);
+                                        knowElements.put(id, AndroidElement(id, it));
                                         val jsonEL = accessibilityNodeToJson(it);
                                         jsonEL.put("elementId", id);
                                         data.put(jsonEL);
@@ -106,16 +106,23 @@ class MainActivity: FlutterActivity() {
 
                                     val element = knowElements.get(elementId);
 
+                                    Log.d("MainActivity", elementId);
+                                    Log.d("MainActivity", action);
+
                                     if(element == null){
+                                        Log.d("MainActivity", "element not found");
                                         return result.success(false);
                                     }
 
+                                    Log.d("MainActivity", element.key);
+
+                                    Log.d("MainActivity", accessibilityNodeToJson(element.node).toString());
                                     if(action.equals("click")){
-                                        element.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                        element.node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                                     }
 
                                     if(action.equals("long-click")){
-                                        element.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
+                                        element.node.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
                                     }
 
                                     return result.success(true);
@@ -150,31 +157,7 @@ class MainActivity: FlutterActivity() {
     }
 
 
-    fun accessibilityNodeToJson(it: AccessibilityNodeInfo): JSONObject {
 
-        val element = JSONObject();
-        element.put("childCount", it.childCount);
-        element.put("packageName", it.packageName);
-        element.put("class", it.className);
-        element.put("text", it.className);
-        element.put("desc", it.contentDescription);
-
-        element.put("clickable", it.isClickable);
-        element.put("long-clickable", it.isLongClickable);
-        element.put("password", it.isPassword);
-        element.put("scrollable", it.isScrollable);
-        element.put("displayed", it.isVisibleToUser);
-
-        element.put("focusable", it.isFocusable);
-        element.put("focused", it.isFocused);
-
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            element.put("resource-id", it.viewIdResourceName);
-        }
-
-
-        return element;
-    }
 
     fun launchPackage(packageName: String): Boolean {
         try {
@@ -205,7 +188,33 @@ class MainActivity: FlutterActivity() {
 
     companion object {
 
+//        val knowElements:WeakHashMap<String, AccessibilityNodeInfo> = WeakHashMap();
+        val knowElements:HashMap<String, AndroidElement> = HashMap();
 
-        val knowElements:WeakHashMap<String, AccessibilityNodeInfo> = WeakHashMap();
+        fun accessibilityNodeToJson(it: AccessibilityNodeInfo): JSONObject {
+
+            val element = JSONObject();
+            element.put("childCount", it.childCount);
+            element.put("packageName", it.packageName);
+            element.put("class", it.className);
+            element.put("text", it.className);
+            element.put("desc", it.contentDescription);
+
+            element.put("clickable", it.isClickable);
+            element.put("long-clickable", it.isLongClickable);
+            element.put("password", it.isPassword);
+            element.put("scrollable", it.isScrollable);
+            element.put("displayed", it.isVisibleToUser);
+
+            element.put("focusable", it.isFocusable);
+            element.put("focused", it.isFocused);
+
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                element.put("resource-id", it.viewIdResourceName);
+            }
+
+
+            return element;
+        }
     }
 }

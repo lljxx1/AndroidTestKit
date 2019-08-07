@@ -100,7 +100,16 @@ object AccessibilityNodeInfoDumper {
 
         val eid = UUID.randomUUID().toString();
         serializer.attribute("", "element-id", eid);
-        MainActivity.knowElements.put(eid, node);
+
+        if(!MainActivity.knowElements.containsKey(eid)){
+            MainActivity.knowElements.put(eid, AndroidElement(eid, node));
+        }else{
+            Log.d("MainActivityDump", "hit");
+        }
+
+        Log.d("MainActivityDump", eid);
+        Log.d("MainActivityDump", java.lang.Boolean.toString(node.isClickable));
+        Log.d("MainActivityDump", MainActivity.accessibilityNodeToJson(node).toString());
 
         val count = node.childCount
         for (i in 0 until count) {

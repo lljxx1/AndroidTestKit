@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "test": "webpack --mode development src/test.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.3",
+    "webpack": "^4.39.1",
+    "webpack-cli": "^3.3.6",
+    "webpack-dev-server": "^3.7.2"
+  }
+}
