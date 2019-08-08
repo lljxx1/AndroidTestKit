@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<hierarchy rotation="16843558">
+  <node index="0" text="Chrome" resource-id="" class="android.widget.TextView" package="com.google.android.apps.nexuslauncher" content-desc="Chrome" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="true" password="false" selected="false" bounds="[644,1584][851,1794]" element-id="6f44a7df-3e97-450e-b186-71ae63c836f1"/>
+</hierarchy>

@@ -14,6 +14,8 @@ class MyAccessibilityService: AccessibilityService() {
     }
 
     override fun onInterrupt() {
+
+
         Log.d("MyAccessibilityService", "onInterrupt");
     }
 
