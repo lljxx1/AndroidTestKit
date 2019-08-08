@@ -6,56 +6,89 @@ import 'package:flutter_liquidcore/liquidcore.dart';
 import 'DriverBridge.dart';
 import 'ScriptEngine.dart';
 
-void main() {
-  //enableLiquidCoreLogging = true;
-  runApp(MyApp());
+void main() => runApp(MyApp());
+
+class MyApp extends StatelessWidget {
+
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(),
+    );
+  }
 }
 
-class MyApp extends StatefulWidget {
+
+class MyHomePage extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+
+class _MyAppState extends State<MyHomePage> {
   Random _rng;
   MicroService _microService;
   JSContext _jsContext;
 
   String _jsContextResponse = '<empty>';
   String _microServiceResponse = '<empty>';
+  String barcode = "";
   int _microServiceWorld = 0;
   ScriptEngine _engine;
+  bool serviceIsEnable = false;
+  Driver dr = new Driver();
+
+  TextEditingController urlC = TextEditingController(text:  "http://192.168.41.148:8080/dist/main.js");
 
   static const platform = const MethodChannel('samples.flutter.dev/startApp');
 
   @override
   void initState() {
     super.initState();
+    checkIsEnable();
   }
 
-  testLanuch() async {
-    try {
-      final bool result = await platform.invokeMethod('launchPackage', {
-        "appName": "微信"
-      });
-      print(result);
-      print("lanuch=");
-    } on PlatformException catch (e) {
-      print(e);
+  checkIsEnable() async {
+    var isenable = await dr.checkAccessibilityIsEnabled();
+    this.serviceIsEnable = isenable as bool;
+    if(!this.serviceIsEnable){
+      showDialog<String>(
+          context: context,
+          builder: (BuildContext context) {
+            return SimpleDialog(
+              title: const Text('开启辅助服务！'),
+              titlePadding: EdgeInsets.only(
+                left: 15,
+                top: 15,
+              ),
+              contentPadding:
+              EdgeInsets.only(left: 15, right: 15, top: 15, bottom: 15),
+              children: <Widget>[
+                Text("执行脚本需要开启辅助功能"),
+                SizedBox(height: 15),
+                RaisedButton(
+                  onPressed: () async {
+                    dr.goAccessibilitySetting();
+                  },
+                  color: Colors.blue,
+                  child: Text(
+                    '前往开启',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          });
     }
-  }
-
-  testGoHome() async {
-    try {
-      final bool result = await platform.invokeMethod('click', {
-        "x": 1,
-        "y": 1
-      });
-      print(result);
-      print("testGoHome=");
-    } on PlatformException catch (e) {
-      print(e);
-    }
+    print('isenable');
+    print(isenable);
   }
 
   @override
@@ -63,46 +96,25 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('FlutterLiquidcore App'),
+          title: const Text('TestKit'),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.add),
+              onPressed: () async {
+
+              },
+            )
+          ],
         ),
         body: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
+              TextField(
+                controller: urlC,
+              ),
               RaisedButton(
-                child: const Text('MicroService'),
+                child: const Text('Run'),
                 onPressed: initMicroService,
-              ),
-              Center(
-                child: Text('MicroService response: $_microServiceResponse\n'),
-              ),
-              RaisedButton(
-                child: const Text('Test App'),
-                onPressed: testLanuch,
-              ),
-              RaisedButton(
-                child: const Text('Test Click'),
-                onPressed: testGoHome,
-              ),
-              RaisedButton(
-                child: const Text('getSource'),
-                onPressed: () async {
-                  print('findByText');
-                  var driver = Driver();
-                  var source = await driver.getSource();
-                  print(source);
-                },
-              ),
-              RaisedButton(
-                child: const Text('findByText Click'),
-                onPressed: () async {
-                  print('findByText');
-                  var driver = Driver();
-                  var res = await driver.findByText('App');
-                  print(res);
-                },
-              ),
-              Center(
-                child: Text('JSContext response: $_jsContextResponse\n'),
               )
             ]),
       ),
@@ -111,10 +123,10 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
-    if (_microService != null) {
+    if (_engine != null) {
       // Exit and free up the resources.
       // _microService.exitProcess(0); // This API call might not always be available.
-      _microService.emit('exit');
+      _engine.stop();
     }
     super.dispose();
   }
@@ -122,94 +134,13 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   void initMicroService() async {
-//    if (_microService == null) {
-      String uri;
-
-      // Android doesn't allow dashes in the res/raw directory.
-      //uri = "android.resource://io.jojodev.flutter.liquidcoreexample/raw/liquidcore_sample";
-//      uri = "@flutter_assets/Resources/liquidcore_sample.js";
-      uri = "http://192.168.1.6:8080/dist/main.js";
-
       if(_engine != null){
         _engine.stop();
       }
-
-      _engine = new ScriptEngine(uri);
-//      await _microService.addEventListener('ready',
-//              (service, event, eventPayload) {
-//            // The service is ready.
-//            if (!mounted) {
-//              return;
-//            }
-//
-//            print('ready '+uri);
-//            //_emit();
-//      });
-//
-//    var driver = Driver();
-//
-//
-//
-//      await _microService.addEventListener('sendClick', (service, event, eventPayload) {
-//            // The service is ready.
-//            if (!mounted) {
-//              return;
-//            }
-//            print('sendClick '+uri);
-//            print(eventPayload);
-//            platform.invokeMethod('click', {
-//              "x": eventPayload['x'],
-//              "y": eventPayload['y']
-//            });
-//      });
-//
-//      await _microService.addEventListener('doActionToElement', (service, event, eventPayload) async {
-//        var res = await driver.doActionToElement(eventPayload);
-//        var result = {};
-//        result['event'] = eventPayload;
-//        result['result'] = res;
-//        _microService.emit("doActionToElementResponse", res);
-//      });
-//
-//      await _microService.addEventListener('findByText', (service, event, eventPayload) async {
-//        var res = await driver.findByText(eventPayload['text']);
-//        var result = {};
-//        result['event'] = eventPayload;
-//        result['result'] = res;
-//        _microService.emit("findByTextResponse", result);
-//      });
-
-
-
-      // Start the service.
+      _engine = new ScriptEngine(urlC.text);
       await _engine.start();
-//    }
-
   }
 
 
 
-  void _setMicroServiceResponse(message) {
-    if (!mounted) {
-      print("microService: widget not mounted");
-      return;
-    }
-    setState(() {
-      _microServiceResponse = message;
-    });
-  }
-
-  void _setJsContextResponse(value) {
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) {
-      print("jsContext: widget not mounted");
-      return;
-    }
-
-    setState(() {
-      _jsContextResponse = value;
-    });
-  }
 }

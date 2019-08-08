@@ -53,6 +53,16 @@ class Driver {
     });
   }
 
+
+  Future<dynamic> checkAccessibilityIsEnabled() async {
+    return _invokeMethod('checkAccessibilityIsEnabled');
+  }
+
+  Future<dynamic> goAccessibilitySetting() async {
+    return _invokeMethod('goAccessibilitySetting');
+  }
+
+
   Future<dynamic> doActionToElement(Map data) async {
     return _invokeMethod('doActionToElement', data);
   }

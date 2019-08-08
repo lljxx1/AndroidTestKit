@@ -118,6 +118,7 @@ var ATTR_ID = 'element-id';
 
 
 async function getDoc() {
+
     var viewTree = await Driver.getSource();
     var doc = cheerio.load(viewTree, { ignoreWhitespace: true, xmlMode: true });
     doc.prototype.click = function () {
@@ -128,6 +129,7 @@ async function getDoc() {
         }
         console.log('click', this.length)
     }
+
     return doc;
 }
 
@@ -139,20 +141,18 @@ async function getDoc() {
 (async function loop() {
     console.log('source new');
     var $ = await getDoc();
-    var chrome = $("[text*='Chrome']");
+    var chrome = $("[text*='微信']");
     // chrome.eq(0).click();
-
-    var els = await Driver.findByText("Chrome");
-    els = JSON.parse(els);
+    // var els = await Driver.findByText("Chrome");
+    // els = JSON.parse(els);
     // var source = await Driver.getSource();
     // console.log('source', chrome.length);
-    console.log('findByTextNNN', els);
-    if (els.length > 0) {
-        // Driver.clickElement(els[0].elementId)
-    };
+    // console.log('findByTextNNN', els);
+    // if (els.length > 0) {
+    //     Driver.clickElement(els[0].elementId)
+    // };
 
     if (chrome.length) {
-
         console.log('chrome', chrome.length, chrome.attr());
         var icon = chrome.eq(0);
         console.log('chrome icon id', icon.attr(ATTR_ID))

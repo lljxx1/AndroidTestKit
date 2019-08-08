@@ -22,6 +22,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import android.util.Xml.newSerializer
 import android.R.attr.rotation
+import android.accessibilityservice.AccessibilityService
+import android.content.Context
 import android.util.DisplayMetrics
 import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
@@ -33,28 +35,48 @@ import kotlin.collections.HashMap
 
 class MainActivity: FlutterActivity() {
 
-    private val CHANNEL = "samples.flutter.dev/startApp"
-
-
-
+    private val CHANNEL = "samples.flutter.dev/startApp";
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this);
-
         val atm = GlobalActionAutomator(Handler());
 
+
+        Runtime.context = applicationContext;
 
 
         MethodChannel(getFlutterView(), CHANNEL)
                     .setMethodCallHandler(object : MethodCallHandler {
                     override fun onMethodCall(call: MethodCall, result: Result) {
 
+
+                        if (call.method.equals("checkAccessibilityIsEnabled")) {
+                            val appContext = Runtime.context;
+                            if(appContext != null){
+                                return result.success(AccessibilityServiceUtils.isAccessibilityServiceEnabled(appContext, MyAccessibilityService::class.java));
+                            }
+                            return result.success(false);
+                        }
+
+
+                        if (call.method.equals("goAccessibilitySetting")) {
+                            val appContext = Runtime.context;
+                            if(appContext != null){
+                                AccessibilityServiceUtils.goToAccessibilitySetting(appContext);
+                                return result.success(true);
+                            }
+                            return result.success(false);
+                        }
+
+
+
                         var acs = MyAccessibilityService.instance;
                         if(acs != null) atm.setService(acs);
-
                         if(acs != null){
+
+
 
                             if (call.method.equals("click")) {
                                 if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -67,6 +89,17 @@ class MainActivity: FlutterActivity() {
                             if (call.method.equals("home")) {
                                 if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                     return result.success(atm.home());
+                                }
+                            }
+
+
+                            if (call.method.equals("doGlobalAction")) {
+                                var action = call.argument<String>("action") as String;
+                                if(action.equals("home")){
+                                    return result.success(atm.home());
+                                }
+                                if(action.equals("back")){
+                                    return result.success(atm.back());
                                 }
                             }
 
@@ -86,21 +119,38 @@ class MainActivity: FlutterActivity() {
                                     Log.d("MainActivity", "selector="+selector+" strategy="+strategy+" nodes="+nodes.size);
 
                                     val data = JSONArray();
-                                    nodes.forEach {
-                                        val id = UUID.randomUUID().toString();
-                                        knowElements.put(id, AndroidElement(id, it));
-                                        val jsonEL = accessibilityNodeToJson(it);
-                                        jsonEL.put("elementId", id);
-                                        data.put(jsonEL);
+                                    val stringWriter = StringWriter()
+
+                                    try {
+                                        val serializer = Xml.newSerializer()
+                                        serializer.setOutput(stringWriter)
+                                        serializer.startDocument("UTF-8", true)
+                                        serializer.startTag("", "hierarchy")
+                                        serializer.attribute("", "rotation", Integer.toString(rotation))
+                                        nodes.forEach {
+                                            AccessibilityNodeInfoDumper.dumpNodeRec(it, serializer, 0, 1280, 920, true);
+                                            val id = UUID.randomUUID().toString();
+                                            knowElements.put(id, AndroidElement(id, it, it.hashCode().toString()));
+                                            val jsonEL = accessibilityNodeToJson(it);
+                                            jsonEL.put("elementId", id);
+                                            data.put(jsonEL);
+                                        }
+                                        serializer.endTag("", "hierarchy")
+                                        serializer.endDocument()
+                                    } catch (e: IOException) {
                                     }
 
-                                    return result.success(data.toString());
+                                    var re = JSONObject();
+                                    re.put("data", data);
+                                    re.put("xml", stringWriter.toString());
+                                    return result.success(re.toString());
                                 }
                             }
 
 
                             if (call.method.equals("doActionToElement")) {
                                 if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+
                                     var elementId = call.argument<String>("elementId") as String;
                                     var action = call.argument<String>("action") as String;
 
@@ -115,14 +165,31 @@ class MainActivity: FlutterActivity() {
                                     }
 
                                     Log.d("MainActivity", element.key);
-
+                                    Log.d("MainActivity", element.hashCode);
                                     Log.d("MainActivity", accessibilityNodeToJson(element.node).toString());
+
                                     if(action.equals("click")){
-                                        element.node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                        if(element.node.isClickable){
+                                            element.node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                        }else{
+                                            return result.success(false);
+                                        }
                                     }
 
                                     if(action.equals("long-click")){
-                                        element.node.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
+                                        if(element.node.isLongClickable){
+                                            element.node.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
+                                        }else{
+                                            return result.success(false);
+                                        }
+                                    }
+
+                                    if(action.equals("scroll")){
+                                        if(element.node.isScrollable){
+                                            element.node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                                        }else{
+                                            return result.success(false);
+                                        }
                                     }
 
                                     return result.success(true);
@@ -158,7 +225,6 @@ class MainActivity: FlutterActivity() {
 
 
 
-
     fun launchPackage(packageName: String): Boolean {
         try {
             val packageManager = this.getPackageManager()
@@ -188,8 +254,8 @@ class MainActivity: FlutterActivity() {
 
     companion object {
 
-//        val knowElements:WeakHashMap<String, AccessibilityNodeInfo> = WeakHashMap();
-        val knowElements:HashMap<String, AndroidElement> = HashMap();
+        val knowElements:WeakHashMap<String, AndroidElement> = WeakHashMap();
+//        val knowElements:HashMap<String, AndroidElement> = HashMap();
 
         fun accessibilityNodeToJson(it: AccessibilityNodeInfo): JSONObject {
 

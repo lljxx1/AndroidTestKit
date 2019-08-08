@@ -44,7 +44,7 @@ object AccessibilityNodeInfoDumper {
             serializer.startDocument("UTF-8", true)
             serializer.startTag("", "hierarchy")
             serializer.attribute("", "rotation", Integer.toString(rotation))
-            dumpNodeRec(root, serializer, 0, width, height)
+            dumpNodeRec(root, serializer, 0, width, height, false)
             serializer.endTag("", "hierarchy")
             serializer.endDocument()
 
@@ -73,8 +73,8 @@ object AccessibilityNodeInfoDumper {
     }
 
     @Throws(IOException::class)
-    private fun dumpNodeRec(node: AccessibilityNodeInfo, serializer: XmlSerializer, index: Int,
-                            width: Int, height: Int) {
+    fun dumpNodeRec(node: AccessibilityNodeInfo, serializer: XmlSerializer, index: Int,
+                            width: Int, height: Int, skipNext: Boolean) {
         serializer.startTag("", "node")
         if (!nafExcludedClass(node) && !nafCheck(node))
             serializer.attribute("", "NAF", java.lang.Boolean.toString(true))
@@ -102,28 +102,27 @@ object AccessibilityNodeInfoDumper {
         serializer.attribute("", "element-id", eid);
 
         if(!MainActivity.knowElements.containsKey(eid)){
-            MainActivity.knowElements.put(eid, AndroidElement(eid, node));
+            MainActivity.knowElements.put(eid, AndroidElement(eid, node, node.hashCode().toString()));
         }else{
             Log.d("MainActivityDump", "hit");
         }
 
-        Log.d("MainActivityDump", eid);
-        Log.d("MainActivityDump", java.lang.Boolean.toString(node.isClickable));
-        Log.d("MainActivityDump", MainActivity.accessibilityNodeToJson(node).toString());
-
-        val count = node.childCount
-        for (i in 0 until count) {
-            val child = node.getChild(i)
-            if (child != null) {
-                if (child.isVisibleToUser) {
-                    dumpNodeRec(child, serializer, i, width, height)
-                    child.recycle()
+        if(!skipNext) {
+            val count = node.childCount
+            for (i in 0 until count) {
+                val child = node.getChild(i)
+                if (child != null) {
+                    if (child.isVisibleToUser) {
+                        dumpNodeRec(child, serializer, i, width, height, false)
+                        // shit happened ?
+                        //child.recycle()
+                    } else {
+                        Log.i(LOGTAG, String.format("Skipping invisible child: %s", child.toString()))
+                    }
                 } else {
-                    Log.i(LOGTAG, String.format("Skipping invisible child: %s", child.toString()))
+                    Log.i(LOGTAG, String.format("Null child %d/%d, parent: %s",
+                            i, count, node.toString()))
                 }
-            } else {
-                Log.i(LOGTAG, String.format("Null child %d/%d, parent: %s",
-                        i, count, node.toString()))
             }
         }
         serializer.endTag("", "node")
