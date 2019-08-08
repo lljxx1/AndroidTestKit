@@ -152,13 +152,10 @@ async function getDoc() {
 
 
 //var TestKit = new TestSuite();
-var request = require('request-promise');
 
 
 
 (async function loop() {
-    var bidui = await request('http://www.baidu.com');
-    console.log('source new', bidui);
     var $ = await getDoc();
 
     var chrome = $("[text*='惠拍']");

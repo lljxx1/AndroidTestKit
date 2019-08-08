@@ -101,8 +101,8 @@ object AccessibilityNodeInfoDumper {
         val eid = UUID.randomUUID().toString();
         serializer.attribute("", "element-id", eid);
 
-        if(!MainActivity.knowElements.containsKey(eid)){
-            MainActivity.knowElements.put(eid, AndroidElement(eid, node, node.hashCode().toString()));
+        if(!MainActivity.knowElements.containsKey(node.hashCode().toString())){
+            MainActivity.knowElements.put(node.hashCode().toString(), node);
         }else{
             Log.d("MainActivityDump", "hit");
         }

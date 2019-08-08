@@ -130,7 +130,7 @@ class MainActivity: FlutterActivity() {
                                         nodes.forEach {
                                             AccessibilityNodeInfoDumper.dumpNodeRec(it, serializer, 0, 1280, 920, true);
                                             val id = UUID.randomUUID().toString();
-                                            knowElements.put(id, AndroidElement(id, it, it.hashCode().toString()));
+                                            knowElements.put(it.hashCode().toString(), it);
                                             val jsonEL = accessibilityNodeToJson(it);
                                             jsonEL.put("elementId", id);
                                             data.put(jsonEL);
@@ -264,7 +264,7 @@ class MainActivity: FlutterActivity() {
 
     companion object {
 
-        val knowElements:WeakHashMap<String, AndroidElement> = WeakHashMap();
+        val knowElements:WeakHashMap<String, AccessibilityNodeInfo> = WeakHashMap();
 //        val knowElements:HashMap<String, AndroidElement> = HashMap();
 
         fun accessibilityNodeToJson(it: AccessibilityNodeInfo): JSONObject {

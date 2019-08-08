@@ -1,0 +1,19 @@
+{
+  "name": "example",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/liquidcore-cli/lib/cli.js",
+    "server": "node node_modules/liquidcore-cli/lib/cli.js server",
+    "bundler": "node node_modules/liquidcore-cli/lib/cli.js bundle"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "cheerio": "^1.0.0-rc.3",
+    "liquidcore-cli": "^0.4.9",
+    "react-native": "0.56.0",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.4"
+  }
+}
