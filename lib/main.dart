@@ -45,7 +45,7 @@ class _MyAppState extends State<MyHomePage> {
   bool serviceIsEnable = false;
   Driver dr = new Driver();
 
-  TextEditingController urlC = TextEditingController(text:  "http://192.168.41.148:8080/dist/main.js");
+  TextEditingController urlC = TextEditingController(text:  "http://192.168.1.8:8080/dist/main.js");
 
   static const platform = const MethodChannel('samples.flutter.dev/startApp');
 

@@ -85,6 +85,14 @@ class Driver {
             action: 'click'
         });
     }
+
+
+    static triggerEventToElement(elementId, type) {
+        return sendAction('doActionToElement', {
+            elementId,
+            action: type
+        });
+    }
     // static 
 }
 
@@ -121,13 +129,21 @@ async function getDoc() {
 
     var viewTree = await Driver.getSource();
     var doc = cheerio.load(viewTree, { ignoreWhitespace: true, xmlMode: true });
+
+
     doc.prototype.click = function () {
         for (let index = 0; index < this.length; index++) {
             const element = this.eq(index);
-            Driver.clickElement(element.attr(ATTR_ID));
-            console.log(element.attr(), 'send click');
+            Driver.triggerEventToElement(element.attr(ATTR_ID), 'click');
         }
-        console.log('click', this.length)
+    }
+
+    doc.prototype.scroll = function (type) {
+        type = type || 'forward';
+        for (let index = 0; index < this.length; index++) {
+            const element = this.eq(index);
+            Driver.triggerEventToElement(element.attr(ATTR_ID), 'scroll-' + type);
+        }
     }
 
     return doc;
@@ -141,7 +157,10 @@ async function getDoc() {
 (async function loop() {
     console.log('source new');
     var $ = await getDoc();
-    var chrome = $("[text*='微信']");
+    var chrome = $("[text*='惠拍']");
+
+    var clickElements = $("[clickable='true']");
+    var scrollElements = $("[scrollable='true']");
     // chrome.eq(0).click();
     // var els = await Driver.findByText("Chrome");
     // els = JSON.parse(els);
@@ -157,7 +176,19 @@ async function getDoc() {
         var icon = chrome.eq(0);
         console.log('chrome icon id', icon.attr(ATTR_ID))
         Driver.clickElement(icon.attr(ATTR_ID));
-        return;
+        // return;
+    }
+
+    for (let index = 0; index < clickElements.length; index++) {
+        const element = clickElements.eq(index);
+        console.log('clickElements', element.attr());
+        // element.click();
+    }
+
+    for (let index = 0; index < scrollElements.length; index++) {
+        const element = scrollElements.eq(index);
+        console.log('scrollElements', element.attr())
+        element.scroll();
     }
 
     setTimeout(loop, 5000);

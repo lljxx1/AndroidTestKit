@@ -176,6 +176,7 @@ class MainActivity: FlutterActivity() {
                                         }
                                     }
 
+
                                     if(action.equals("long-click")){
                                         if(element.node.isLongClickable){
                                             element.node.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
@@ -184,9 +185,18 @@ class MainActivity: FlutterActivity() {
                                         }
                                     }
 
-                                    if(action.equals("scroll")){
+
+                                    if(action.equals("scroll-backward")){
                                         if(element.node.isScrollable){
                                             element.node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                                        }else{
+                                            return result.success(false);
+                                        }
+                                    }
+
+                                    if(action.equals("scroll-forward")){
+                                        if(element.node.isScrollable){
+                                            element.node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
                                         }else{
                                             return result.success(false);
                                         }
