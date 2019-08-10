@@ -33,7 +33,7 @@ LiquidCore.on('actionResponse', (reponse) => {
 
 
 // Wrapper
-function sendAction(actionName, data) {
+function sendAction(actionName, data, timeout) {
     return new Promise((resolve, reject) => {
         // var respName = actionName + 'Response';
         var eventId = getGuid();
@@ -41,6 +41,8 @@ function sendAction(actionName, data) {
         data.actionName = actionName;
 
         LiquidCore.emit(actionName, data);
+
+        timeout = timeout || 3000
 
         watchers[actionName] = {};
         watchers[actionName][eventId] = (re) => {
@@ -60,7 +62,7 @@ function sendAction(actionName, data) {
             } catch (e) {
             }
             reject('timeout');
-        }, 3000);
+        }, timeout);
     });
 }
 
@@ -152,19 +154,27 @@ async function getDoc() {
 
 
 //var TestKit = new TestSuite();
-var request = require('request-promise');
+// var request = require('request-promise');
 
+
+class AppWalker {
+
+
+
+}
 
 
 (async function loop() {
-    var bidui = await request('http://www.baidu.com');
-    console.log('source new', bidui);
+    return;
+    // var bidui = await request('http://www.baidu.com');
+    // console.log('source new', bidui);
     var $ = await getDoc();
 
     var chrome = $("[text*='惠拍']");
 
     var clickElements = $("[clickable='true']");
     var scrollElements = $("[scrollable='true']");
+
     // chrome.eq(0).click();
     // var els = await Driver.findByText("Chrome");
     // els = JSON.parse(els);
@@ -196,4 +206,28 @@ var request = require('request-promise');
     }
 
     setTimeout(loop, 5000);
+})();
+
+
+LiquidCore.on('onAccessibilityEvent', (reponse) => {
+    console.log(reponse);
+});
+
+
+
+
+(async () => {
+    setTimeout(() => {
+        (async () => {
+            var appList = await sendAction('getAppList', {}, 10 * 1000);
+            console.log(appList);
+
+            var appList = await sendAction('launchPackage', {
+                appName: 'Chrome'
+            });
+            console.log(appList);
+
+            
+        })();
+    }, 3000);
 })();

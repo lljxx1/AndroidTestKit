@@ -98,7 +98,7 @@ object AccessibilityNodeInfoDumper {
                 node, width, height).toShortString())
 
 
-        val eid = UUID.randomUUID().toString();
+        val eid = node.hashCode().toString();
         serializer.attribute("", "element-id", eid);
 
         if(!MainActivity.knowElements.containsKey(node.hashCode().toString())){

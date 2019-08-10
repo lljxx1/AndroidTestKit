@@ -14,10 +14,13 @@ class ScriptEngine {
     print(uri);
     _microService = new MicroService(uri);
     proxy();
+    _methodChannel.setMethodCallHandler((MethodCall call) {
+      _microService.emit(call.method, call.arguments);
+    });
   }
 
   proxy(){
-    List<String> methods = ['doActionToElement', 'click', 'findElement', 'home', 'launchPackage', 'getSource'];
+    List<String> methods = ['doActionToElement', 'click', 'findElement', 'home', 'launchPackage', 'getSource', 'getAppList'];
     methods.forEach((action) => {
         _microService.addEventListener(action,  (service, event, eventPayload) async {
           print("on "+action);

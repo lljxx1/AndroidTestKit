@@ -45,7 +45,7 @@ class _MyAppState extends State<MyHomePage> {
   bool serviceIsEnable = false;
   Driver dr = new Driver();
 
-  TextEditingController urlC = TextEditingController(text:  "http://192.168.31.211:8080/dist/main.js");
+  TextEditingController urlC = TextEditingController(text:  "http://192.168.1.6:8080/dist/main.js");
 
   static const platform = const MethodChannel('samples.flutter.dev/startApp');
 
@@ -102,21 +102,15 @@ class _MyAppState extends State<MyHomePage> {
               icon: Icon(Icons.add),
               onPressed: () async {
 
+
+
               },
             )
           ],
         ),
-        body: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: <Widget>[
-              TextField(
-                controller: urlC,
-              ),
-              RaisedButton(
-                child: const Text('Run'),
-                onPressed: initMicroService,
-              )
-            ]),
+        body: ListView(
+
+        ),
       ),
     );
   }
@@ -136,7 +130,7 @@ class _MyAppState extends State<MyHomePage> {
   void initMicroService() async {
       if(_engine != null){
         try{
-//          _engine.stop();
+          _engine.stop();
         }catch(e){
         }
       }

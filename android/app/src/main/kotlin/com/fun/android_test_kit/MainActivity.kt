@@ -47,9 +47,10 @@ class MainActivity: FlutterActivity() {
         Runtime.context = applicationContext;
 
 
-        MethodChannel(getFlutterView(), CHANNEL)
-                    .setMethodCallHandler(object : MethodCallHandler {
+        val ch = MethodChannel(getFlutterView(), CHANNEL);
+        ch.setMethodCallHandler(object : MethodCallHandler {
                     override fun onMethodCall(call: MethodCall, result: Result) {
+
 
 
                         if (call.method.equals("checkAccessibilityIsEnabled")) {
@@ -164,13 +165,12 @@ class MainActivity: FlutterActivity() {
                                         return result.success(false);
                                     }
 
-                                    Log.d("MainActivity", element.key);
-                                    Log.d("MainActivity", element.hashCode);
-                                    Log.d("MainActivity", accessibilityNodeToJson(element.node).toString());
+                                    Log.d("MainActivity", element.hashCode().toString());
+                                    Log.d("MainActivity", accessibilityNodeToJson(element).toString());
 
                                     if(action.equals("click")){
-                                        if(element.node.isClickable){
-                                            element.node.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                                        if(element.isClickable){
+                                            element.performAction(AccessibilityNodeInfo.ACTION_CLICK);
                                         }else{
                                             return result.success(false);
                                         }
@@ -178,8 +178,8 @@ class MainActivity: FlutterActivity() {
 
 
                                     if(action.equals("long-click")){
-                                        if(element.node.isLongClickable){
-                                            element.node.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
+                                        if(element.isLongClickable){
+                                            element.performAction(AccessibilityNodeInfo.ACTION_LONG_CLICK);
                                         }else{
                                             return result.success(false);
                                         }
@@ -187,20 +187,21 @@ class MainActivity: FlutterActivity() {
 
 
                                     if(action.equals("scroll-backward")){
-                                        if(element.node.isScrollable){
-                                            element.node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
+                                        if(element.isScrollable){
+                                            element.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
                                         }else{
                                             return result.success(false);
                                         }
                                     }
 
                                     if(action.equals("scroll-forward")){
-                                        if(element.node.isScrollable){
-                                            element.node.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
+                                        if(element.isScrollable){
+                                            element.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
                                         }else{
                                             return result.success(false);
                                         }
                                     }
+
 
                                     return result.success(true);
                                 }
@@ -217,6 +218,10 @@ class MainActivity: FlutterActivity() {
 
                         }
 
+                        if (call.method.equals("getAppList")) {
+                            Log.d("MainActivity", "getAppList called");
+                            return result.success(getAppList().toString())
+                        }
 
                         if (call.method.equals("launchPackage")) {
                             var app = call.argument<String>("appName") as String;
@@ -228,9 +233,16 @@ class MainActivity: FlutterActivity() {
                         } else {
                             result.notImplemented()
                         }
-                    }
-                })
 
+
+
+                    }
+                });
+
+
+
+
+        channel = ch;
     }
 
 
@@ -244,6 +256,21 @@ class MainActivity: FlutterActivity() {
         } catch (e: Exception) {
             return false
         }
+    }
+
+    fun getAppList(): JSONArray {
+        val apps = JSONArray();
+        val packageManager = this.getPackageManager()
+        val installedApplications = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+        for (applicationInfo in installedApplications) {
+            val appData = JSONObject();
+            appData.put("package", applicationInfo.packageName)
+            appData.put("appName", packageManager.getApplicationLabel(applicationInfo).toString())
+            apps.put(appData);
+        }
+        Log.d("MainActivity", "getAppList app="+apps.length());
+
+        return apps;
     }
 
     fun getPackageName(appName: String): String? {
@@ -265,6 +292,7 @@ class MainActivity: FlutterActivity() {
     companion object {
 
         val knowElements:WeakHashMap<String, AccessibilityNodeInfo> = WeakHashMap();
+        var channel:MethodChannel ?= null;
 //        val knowElements:HashMap<String, AndroidElement> = HashMap();
 
         fun accessibilityNodeToJson(it: AccessibilityNodeInfo): JSONObject {
