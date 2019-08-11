@@ -109,7 +109,15 @@ class _MyAppState extends State<MyHomePage> {
           ],
         ),
         body: ListView(
-
+          children: <Widget> [
+            ListTile(
+              title: Text("测试"),
+                subtitle: Text("http://192.168.1.6:8080/dist/main.js"),
+                trailing: IconButton(
+                  icon: Icon(Icons.keyboard_arrow_right)
+                )
+            )
+          ]
         ),
       ),
     );
