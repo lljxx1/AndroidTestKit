@@ -44,6 +44,7 @@ class _MyAppState extends State<MyHomePage> {
   ScriptEngine _engine;
   bool serviceIsEnable = false;
   Driver dr = new Driver();
+  bool isRecord = false;
 
   TextEditingController urlC = TextEditingController(text:  "http://192.168.1.6:8080/dist/main.js");
 
@@ -93,11 +94,65 @@ class _MyAppState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    List<Widget> childs = [];
+    List<Map> data = [];
+
+
+    data.add({
+      'name': "测试",
+      'url':  'http://192.168.1.6:8080/dist/main.js'
+    });
+
+    data.add({
+      'name': "pc-home",
+      'url':  'http://192.168.31.211:8080/dist/main.js'
+    });
+
+    data.add({
+      'name': "测试",
+      'url':  'http://192.168.1.6:8080/dist/main.js'
+    });
+
+    data.forEach((f) {
+      childs.add(ListTile(
+          onTap: (){
+            initMicroService(f['url']);
+          },
+          title: Text(f['name']),
+          subtitle: Text(f['url']),
+          trailing: IconButton(
+              icon: Icon(Icons.play_arrow)
+          )
+      ));
+    });
+
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
           title: const Text('TestKit'),
           actions: <Widget>[
+            isRecord ? IconButton(
+              icon: Icon(Icons.stop),
+              onPressed: (){
+                setState(() {
+                  isRecord = false;
+                });
+                _engine.microService.emit("stopRecord");
+              },
+            ) : IconButton(
+              icon: Icon(Icons.fiber_manual_record),
+              onPressed: (){
+                if(_engine == null){
+                  print('start service');
+                  return;
+                }
+                setState(() {
+                  isRecord = true;
+                });
+                _engine.microService.emit("startRecord");
+              },
+            ),
             IconButton(
               icon: Icon(Icons.add),
               onPressed: () async {
@@ -109,15 +164,7 @@ class _MyAppState extends State<MyHomePage> {
           ],
         ),
         body: ListView(
-          children: <Widget> [
-            ListTile(
-              title: Text("测试"),
-                subtitle: Text("http://192.168.1.6:8080/dist/main.js"),
-                trailing: IconButton(
-                  icon: Icon(Icons.keyboard_arrow_right)
-                )
-            )
-          ]
+          children: childs
         ),
       ),
     );
@@ -135,7 +182,13 @@ class _MyAppState extends State<MyHomePage> {
 
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  void initMicroService() async {
+  void initMicroService(url) async {
+
+      platform.invokeMethod("startService", {
+        "url": url
+      });
+
+      return;
       if(_engine != null){
         try{
           _engine.stop();
@@ -145,7 +198,7 @@ class _MyAppState extends State<MyHomePage> {
 
 
       print(urlC.text);
-      _engine = new ScriptEngine(urlC.text);
+      _engine = new ScriptEngine(url);
       await _engine.start();
   }
 

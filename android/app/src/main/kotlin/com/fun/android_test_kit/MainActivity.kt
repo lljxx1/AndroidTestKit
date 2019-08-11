@@ -51,6 +51,11 @@ class MainActivity: FlutterActivity() {
         ch.setMethodCallHandler(object : MethodCallHandler {
                     override fun onMethodCall(call: MethodCall, result: Result) {
 
+                        if (call.method.equals("startService")) {
+                            var url = call.argument<String>("url") as String;
+                            MyAccessibilityService.startScript(url);
+                            return result.success(true);
+                        }
 
 
                         if (call.method.equals("checkAccessibilityIsEnabled")) {

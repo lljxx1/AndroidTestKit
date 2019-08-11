@@ -41,4 +41,6 @@ class ScriptEngine {
   stop() {
     return _microService.exitProcess(0);
   }
+
+  MicroService get microService => _microService;
 }
