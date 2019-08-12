@@ -55,7 +55,6 @@ function sendAction(actionName, data, timeout) {
         console.log('sendAction', Object.keys(watchers));
 
         setTimeout(() => {
-            console.log("time out")
             try {
                 delete watchers[actionName][eventId];
             } catch (e) {
@@ -88,7 +87,6 @@ class Driver {
             action: 'click'
         });
     }
-
 
     static triggerEventToElement(elementId, type) {
         return sendAction('doActionToElement', {
@@ -132,7 +130,7 @@ async function getDoc() {
 
     console.log('viewTree');
     var viewTree = await Driver.getSource();
-    console.log('viewTree end');
+    console.log('viewTree end', viewTree);
     var doc = cheerio.load(viewTree, { ignoreWhitespace: true, xmlMode: true });
 
     doc.prototype.click = function () {
@@ -158,15 +156,16 @@ async function getDoc() {
 //var TestKit = new TestSuite();
 // var request = require('request-promise');
 
-
 class AppWalker {
 
+    
 
 
 }
 
 
 (async function loop() {
+    return;
     // var bidui = await request('http://www.baidu.com');
     // console.log('source new', bidui);
     var $ = await getDoc();
@@ -217,37 +216,43 @@ LiquidCore.on('onAccessibilityEvent', (reponse) => {
     if(isRecord){
         actionsBuffer.push(reponse);
     }
-    console.log(reponse);
 });
-
 
 
 LiquidCore.on('startRecord', () => {
     console.log("startRecord");
-    isRecord = true;
+    (async () => {
+        var appList = await sendAction('launchPackage', {
+            appName: '今日头条'
+        });
+        isRecord = true;
+
+    })();
 });
 
 
 LiquidCore.on('stopRecord', () => {
-    console.log("stopRecord");
-    var data = JSON.stringify(actionsBuffer);
-    console.log(data);
+    console.log("stopRecord", actionsBuffer.length);
+    var collect = JSON.stringify(actionsBuffer);
     actionsBuffer = [];
     isRecord = false;
 });
 
 
+
+
 (async () => {
-    // setTimeout(() => {
-    //     (async () => {
-    //         // var appList = await sendAction('getAppList', {}, 10 * 1000);
-    //         // console.log(appList);
-    //         var $ = await getDoc();
-    //         console.log("hello")
-    //         // var appList = await sendAction('launchPackage', {
-    //         //     appName: 'Chrome'
-    //         // });
-            
-    //     })();
-    // }, 100);
+
+
+
+    await sendAction('launchPackage', {
+        appName: '今日头条'
+    });
+
+
+    var $ = await getDoc();
+
+
+
+
 })();

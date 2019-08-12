@@ -100,6 +100,12 @@ class _MyAppState extends State<MyHomePage> {
 
 
     data.add({
+      'name': "file-adbug",
+      'url':  'http://file.adbug.cn/dist/main.js'
+    });
+
+
+    data.add({
       'name': "测试",
       'url':  'http://192.168.1.6:8080/dist/main.js'
     });
@@ -111,7 +117,7 @@ class _MyAppState extends State<MyHomePage> {
 
     data.add({
       'name': "测试",
-      'url':  'http://192.168.1.6:8080/dist/main.js'
+      'url':  'http://192.168.41.148:8080/dist/main.js'
     });
 
     data.forEach((f) {
@@ -138,25 +144,24 @@ class _MyAppState extends State<MyHomePage> {
                 setState(() {
                   isRecord = false;
                 });
-                _engine.microService.emit("stopRecord");
+
+                platform.invokeMethod("stopRecord");
+                //_engine.microService.emit("stopRecord");
               },
             ) : IconButton(
               icon: Icon(Icons.fiber_manual_record),
               onPressed: (){
-                if(_engine == null){
-                  print('start service');
-                  return;
-                }
                 setState(() {
                   isRecord = true;
                 });
-                _engine.microService.emit("startRecord");
+//                _engine.microService.emit("startRecord");
+                platform.invokeMethod("startRecord");
               },
+
             ),
             IconButton(
               icon: Icon(Icons.add),
               onPressed: () async {
-
 
 
               },

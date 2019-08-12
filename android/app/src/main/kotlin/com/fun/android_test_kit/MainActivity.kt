@@ -82,8 +82,6 @@ class MainActivity: FlutterActivity() {
                         if(acs != null) atm.setService(acs);
                         if(acs != null){
 
-
-
                             if (call.method.equals("click")) {
                                 if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                                     var x = call.argument<String>("x") as Int;
@@ -228,6 +226,19 @@ class MainActivity: FlutterActivity() {
                             return result.success(getAppList().toString())
                         }
 
+                        val runService = MyAccessibilityService.microService;
+                        if(runService != null){
+                            if(call.method.equals("startRecord")){
+                                runService.emit(call.method);
+                                return result.success(true);
+                            }
+
+                            if(call.method.equals("stopRecord")){
+                                runService.emit(call.method);
+                                return result.success(true);
+                            }
+                        }
+
                         if (call.method.equals("launchPackage")) {
                             var app = call.argument<String>("appName") as String;
                             if(acs != null){
@@ -238,6 +249,9 @@ class MainActivity: FlutterActivity() {
                         } else {
                             result.notImplemented()
                         }
+
+
+
 
 
 
