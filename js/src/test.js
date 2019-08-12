@@ -4,7 +4,9 @@ console.log('Hello World!, the Microservice is running!');
 // A micro service will exit when it has nothing left to do.  So to
 // avoid a premature exit, let's set an indefinite timer.  When we
 // exit() later, the timer will get invalidated.
-setInterval(function () { }, 1000);
+setInterval(function () {
+    console.log('heartmap')
+ }, 1000);
 
 function getGuid() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -18,9 +20,11 @@ function getGuid() {
 var watchers = {};
 
 LiquidCore.on('actionResponse', (reponse) => {
+    console.log(typeof reponse);
     var originalEvent = reponse.event;
     var eventId = originalEvent.eventId;
     var actionName = originalEvent.actionName;
+    console.log(Object.keys(watchers));
     if (watchers[actionName]) {
         if (watchers[actionName]) {
             try {
@@ -33,34 +37,33 @@ LiquidCore.on('actionResponse', (reponse) => {
 
 
 // Wrapper
-function sendAction(actionName, data) {
+function sendAction(actionName, data, timeout) {
     return new Promise((resolve, reject) => {
         // var respName = actionName + 'Response';
         var eventId = getGuid();
         data.eventId = eventId;
         data.actionName = actionName;
 
-        LiquidCore.emit(actionName, data);
+        timeout = timeout || 3000;
 
         watchers[actionName] = {};
         watchers[actionName][eventId] = (re) => {
+            console.log('action callback', re);
             resolve(re);
         }
 
-        //        LiquidCore.on(respName, (reponse) => {
-        //            var originalEvent = reponse.event;
-        //            if(originalEvent.eventId == eventId){
-        //                resolve(reponse.result);
-        //            }
-        //        });
+        console.log('sendAction', Object.keys(watchers));
 
         setTimeout(() => {
+            console.log("time out")
             try {
                 delete watchers[actionName][eventId];
             } catch (e) {
             }
             reject('timeout');
-        }, 3000);
+        }, timeout);
+
+        LiquidCore.emit(actionName, data);
     });
 }
 
@@ -83,6 +86,14 @@ class Driver {
         return sendAction('doActionToElement', {
             elementId,
             action: 'click'
+        });
+    }
+
+
+    static triggerEventToElement(elementId, type) {
+        return sendAction('doActionToElement', {
+            elementId,
+            action: type
         });
     }
     // static 
@@ -119,15 +130,24 @@ var ATTR_ID = 'element-id';
 
 async function getDoc() {
 
+    console.log('viewTree');
     var viewTree = await Driver.getSource();
+    console.log('viewTree end');
     var doc = cheerio.load(viewTree, { ignoreWhitespace: true, xmlMode: true });
+
     doc.prototype.click = function () {
         for (let index = 0; index < this.length; index++) {
             const element = this.eq(index);
-            Driver.clickElement(element.attr(ATTR_ID));
-            console.log(element.attr(), 'send click');
+            Driver.triggerEventToElement(element.attr(ATTR_ID), 'click');
         }
-        console.log('click', this.length)
+    }
+
+    doc.prototype.scroll = function (type) {
+        type = type || 'forward';
+        for (let index = 0; index < this.length; index++) {
+            const element = this.eq(index);
+            Driver.triggerEventToElement(element.attr(ATTR_ID), 'scroll-' + type);
+        }
     }
 
     return doc;
@@ -136,12 +156,25 @@ async function getDoc() {
 
 
 //var TestKit = new TestSuite();
+// var request = require('request-promise');
+
+
+class AppWalker {
+
+
+
+}
 
 
 (async function loop() {
-    console.log('source new');
+    // var bidui = await request('http://www.baidu.com');
+    // console.log('source new', bidui);
     var $ = await getDoc();
-    var chrome = $("[text*='微信']");
+    var chrome = $("[text*='惠拍']");
+
+    var clickElements = $("[clickable='true']");
+    var scrollElements = $("[scrollable='true']");
+
     // chrome.eq(0).click();
     // var els = await Driver.findByText("Chrome");
     // els = JSON.parse(els);
@@ -156,9 +189,65 @@ async function getDoc() {
         console.log('chrome', chrome.length, chrome.attr());
         var icon = chrome.eq(0);
         console.log('chrome icon id', icon.attr(ATTR_ID))
-        Driver.clickElement(icon.attr(ATTR_ID));
-        return;
+        // Driver.clickElement(icon.attr(ATTR_ID));
+        // return;
+    }
+
+    for (let index = 0; index < clickElements.length; index++) {
+        const element = clickElements.eq(index);
+        console.log('clickElements', element.attr());
+        // element.click();
+    }
+
+    for (let index = 0; index < scrollElements.length; index++) {
+        const element = scrollElements.eq(index);
+        console.log('scrollElements', element.attr())
+        // element.scroll();
     }
 
     setTimeout(loop, 5000);
+})();
+
+
+
+var isRecord = false;
+var actionsBuffer = []
+
+LiquidCore.on('onAccessibilityEvent', (reponse) => {
+    if(isRecord){
+        actionsBuffer.push(reponse);
+    }
+    console.log(reponse);
+});
+
+
+
+LiquidCore.on('startRecord', () => {
+    console.log("startRecord");
+    isRecord = true;
+});
+
+
+LiquidCore.on('stopRecord', () => {
+    console.log("stopRecord");
+    var data = JSON.stringify(actionsBuffer);
+    console.log(data);
+    actionsBuffer = [];
+    isRecord = false;
+});
+
+
+(async () => {
+    // setTimeout(() => {
+    //     (async () => {
+    //         // var appList = await sendAction('getAppList', {}, 10 * 1000);
+    //         // console.log(appList);
+    //         var $ = await getDoc();
+    //         console.log("hello")
+    //         // var appList = await sendAction('launchPackage', {
+    //         //     appName: 'Chrome'
+    //         // });
+            
+    //     })();
+    // }, 100);
 })();
