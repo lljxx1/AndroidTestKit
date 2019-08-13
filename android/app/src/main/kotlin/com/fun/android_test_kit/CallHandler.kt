@@ -41,9 +41,16 @@ class CallHandler(val acs: AccessibilityService) {
             }
 
             in "doActionToElement" -> {
+                Log.d("stdout", "doActionToElement "+payload.toString())
                 var elementId = payload.optString("elementId");
                 var action = payload.optString("action");
-                var actionData = payload.optJSONObject("data");
+
+                var actionData = JSONObject();
+                if(payload.has("data")){
+                    actionData = payload.optJSONObject("data");
+                }
+
+                Log.d("stdout", "doActionToElement before");
 
                 return doActionToElement(elementId, action, actionData);
             }
@@ -135,18 +142,20 @@ class CallHandler(val acs: AccessibilityService) {
 
     fun doActionToElement(elementId: String, action: String, actionData: JSONObject): Boolean {
 
+        Log.d("stdout", "handle doActionToElement ");
+
         val element = MainActivity.knowElements.get(elementId);
 
-        Log.d("MainActivity", elementId);
-        Log.d("MainActivity", action);
+        Log.d("stdout", elementId);
+        Log.d("stdout", action);
 
         if(element == null){
             Log.d("MainActivity", "element not found");
             return false;
         }
 
-        Log.d("MainActivity", element.hashCode().toString());
-        Log.d("MainActivity", MainActivity.accessibilityNodeToJson(element).toString());
+        Log.d("stdout", element.hashCode().toString());
+        Log.d("stdout", MainActivity.accessibilityNodeToJson(element).toString());
 
         if(action.equals("click")){
             if(element.isClickable){
@@ -191,7 +200,6 @@ class CallHandler(val acs: AccessibilityService) {
         }
 
 
-
         return true;
     }
 
@@ -220,11 +228,8 @@ class CallHandler(val acs: AccessibilityService) {
     }
 
     fun getSource(): String {
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            var xmlView = AccessibilityNodeInfoDumper.dumpWindowXmlString(MyAccessibilityService.instance?.rootInActiveWindow, 0, 1024, 720);
-            return xmlView.toString();
-        }
-        return "";
+        var xmlView = AccessibilityNodeInfoDumper.dumpWindowXmlString(MyAccessibilityService.instance?.rootInActiveWindow, 0, 1024, 720);
+        return xmlView.toString();
     }
 
 

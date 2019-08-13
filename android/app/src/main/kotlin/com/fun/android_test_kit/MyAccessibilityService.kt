@@ -21,30 +21,27 @@ class MyAccessibilityService: AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
 
+        instance = this;
+        Log.d("MyAccessibilityService", "onAccessibilityEvent reived new");
+        Log.d("MyAccessibilityService", event.toString());
+
         val ch = MainActivity.channel;
         if(event != null){
             val eventJSON = JSONObject();
-
             eventJSON.put("eventString", event.toString());
+            eventJSON.put("className", event.className);
             if(event.source != null){
                 try {
                     var xmlView = AccessibilityNodeInfoDumper.dumpWindowXmlString(event.source, 0, 1024, 720);
                     eventJSON.put("xml", xmlView.toString());
-
                 }catch (e: IllegalStateException){
 
                 }
             }
-
             microService?.emit("onAccessibilityEvent", eventJSON.toString());
             ch?.invokeMethod("onAccessibilityEvent", eventJSON.toString());
             Log.d("MyAccessibilityService", "onAccessibilityEvent channel ready try to brod");
         }
-
-
-        instance = this;
-        Log.d("MyAccessibilityService", "onAccessibilityEvent reived new");
-        Log.d("MyAccessibilityService", event.toString());
 
     }
 
@@ -67,21 +64,19 @@ class MyAccessibilityService: AccessibilityService() {
             }
 
             scriptThread = object: Runnable {
-
                 override fun run() {
+
 
                     if (Looper.myLooper() == null){
                         Looper.prepare();
                     }
 
                     if(microService != null){
-                        microService?.process?.exit(0)
+                        microService?.process?.exit(0);
                     }
 
-                    var acs = MyAccessibilityService.instance;
-
+                    var acs = instance;
                     if(acs != null){
-
                         Log.d("MyAccessibilityService", "startScript uri="+uri);
                         microService = MicroService(instance, URI.create(uri), object : MicroService.ServiceStartListener {
                             override fun onStart(service: MicroService) {
@@ -106,7 +101,10 @@ class MyAccessibilityService: AccessibilityService() {
                                                 result.put("event", payload);
                                                 result.put("result", callResult);
                                                 service.emit("actionResponse", result);
-                                            }catch (e:Exception){}
+                                            }catch (e:Exception){
+
+
+                                            }
                                         }
                                     })
 
