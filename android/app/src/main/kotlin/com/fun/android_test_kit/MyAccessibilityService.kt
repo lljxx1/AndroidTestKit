@@ -10,13 +10,27 @@ import java.lang.IllegalStateException
 import org.liquidplayer.service.MicroService
 
 import android.R.attr.rotation
+import android.content.ComponentName
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import java.net.URI
 
+
+
 class MyAccessibilityService: AccessibilityService() {
 
+
+    private fun tryGetActivity(componentName: ComponentName): ActivityInfo? {
+        try {
+            return packageManager.getActivityInfo(componentName, 0)
+        } catch (e: PackageManager.NameNotFoundException) {
+            return null
+        }
+
+    }
 
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -29,7 +43,23 @@ class MyAccessibilityService: AccessibilityService() {
         if(event != null){
             val eventJSON = JSONObject();
             eventJSON.put("eventString", event.toString());
-            eventJSON.put("className", event.className);
+
+            if(event.packageName != null && event.className != null){
+                val componentName = ComponentName(
+                        event.packageName.toString(),
+                        event.className.toString()
+                )
+
+                val activityInfo = tryGetActivity(componentName)
+                val isActivity = activityInfo != null
+
+                if (isActivity){
+                    eventJSON.put("isActivity", componentName.flattenToShortString());
+                    Log.i("CurrentActivity", componentName.flattenToShortString())
+                }
+            }
+
+
             if(event.source != null){
                 try {
                     var xmlView = AccessibilityNodeInfoDumper.dumpWindowXmlString(event.source, 0, 1024, 720);
@@ -38,6 +68,7 @@ class MyAccessibilityService: AccessibilityService() {
 
                 }
             }
+
             microService?.emit("onAccessibilityEvent", eventJSON.toString());
             ch?.invokeMethod("onAccessibilityEvent", eventJSON.toString());
             Log.d("MyAccessibilityService", "onAccessibilityEvent channel ready try to brod");
@@ -72,8 +103,11 @@ class MyAccessibilityService: AccessibilityService() {
                     }
 
                     if(microService != null){
+                        microService?.emit("exit");
                         microService?.process?.exit(0);
+
                     }
+
 
                     var acs = instance;
                     if(acs != null){
