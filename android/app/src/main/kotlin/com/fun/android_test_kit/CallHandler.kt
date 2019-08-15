@@ -119,7 +119,7 @@ class CallHandler(val acs: AccessibilityService) {
                 serializer.startTag("", "hierarchy")
                 serializer.attribute("", "rotation", Integer.toString(R.attr.rotation))
                 nodes.forEach {
-                    AccessibilityNodeInfoDumper.dumpNodeRec(it, serializer, 0, 1280, 920, true);
+                    AccessibilityNodeInfoDumper.dumpNodeRec(it, serializer, 0, 1080, 1920, true);
                     val id = UUID.randomUUID().toString();
                     MainActivity.knowElements.put(it.hashCode().toString(), it);
                     val jsonEL = MainActivity.accessibilityNodeToJson(it);
@@ -176,6 +176,13 @@ class CallHandler(val acs: AccessibilityService) {
 
         if(action.equals("scroll-backward")){
             if(element.isScrollable){
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                    Log.d("stdout", "scroll-backward not in actionList");
+                    if(!element.actionList.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)){
+                        return false;
+                    };
+                }
                 element.performAction(AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD);
             }else{
                 return false;
@@ -184,6 +191,12 @@ class CallHandler(val acs: AccessibilityService) {
 
         if(action.equals("scroll-forward")){
             if(element.isScrollable){
+                if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    Log.d("stdout", "scroll-forward not in actionList");
+                    if(!element.actionList.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)){
+                        return false;
+                    };
+                }
                 element.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD);
             }else{
                 return false;
@@ -228,7 +241,7 @@ class CallHandler(val acs: AccessibilityService) {
     }
 
     fun getSource(): String {
-        var xmlView = AccessibilityNodeInfoDumper.dumpWindowXmlString(MyAccessibilityService.instance?.rootInActiveWindow, 0, 1024, 720);
+        var xmlView = AccessibilityNodeInfoDumper.dumpWindowXmlString(MyAccessibilityService.instance?.rootInActiveWindow, 0, 1080, 1920);
         return xmlView.toString();
     }
 
