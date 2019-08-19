@@ -15,9 +15,8 @@ import android.R.attr.scaleX
 import android.R.attr.scaleY
 import android.R.attr.scaleX
 
-class GlobalActionAutomator(private val mHandler: Handler?) {
+class GlobalActionAutomator(private val mHandler: Handler?, private var mService: AccessibilityService?) {
 
-    private var mService: AccessibilityService? = null
     fun setService(service: AccessibilityService) {
         mService = service
     }

@@ -41,10 +41,9 @@ class MainActivity: FlutterActivity() {
 
         super.onCreate(savedInstanceState)
         GeneratedPluginRegistrant.registerWith(this);
-        val atm = GlobalActionAutomator(Handler());
+        val atm = GlobalActionAutomator(Handler(), null);
 
-
-        Runtime.context = applicationContext;
+        AppRuntime.context = applicationContext;
 
 
         val ch = MethodChannel(getFlutterView(), CHANNEL);
@@ -59,7 +58,7 @@ class MainActivity: FlutterActivity() {
 
 
                         if (call.method.equals("checkAccessibilityIsEnabled")) {
-                            val appContext = Runtime.context;
+                            val appContext = AppRuntime.context;
                             if(appContext != null){
                                 return result.success(AccessibilityServiceUtils.isAccessibilityServiceEnabled(appContext, MyAccessibilityService::class.java));
                             }
@@ -68,7 +67,7 @@ class MainActivity: FlutterActivity() {
 
 
                         if (call.method.equals("goAccessibilitySetting")) {
-                            val appContext = Runtime.context;
+                            val appContext = AppRuntime.context;
                             if(appContext != null){
                                 AccessibilityServiceUtils.goToAccessibilitySetting(appContext);
                                 return result.success(true);

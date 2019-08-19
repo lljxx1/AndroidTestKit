@@ -2,6 +2,7 @@ package com.`fun`.android_test_kit
 
 import android.R
 import android.accessibilityservice.AccessibilityService
+import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,12 +21,14 @@ import java.io.IOException
 import java.io.StringWriter
 import java.util.*
 import kotlin.collections.ArrayList
+import com.`fun`.android_test_kit.MainActivity
+
+
 
 
 class CallHandler(val acs: AccessibilityService) {
 
-    val atm = GlobalActionAutomator(Handler());
-
+    val atm = GlobalActionAutomator(Handler(), acs);
     fun handleNativeCall(service: MicroService, event:String, payload: JSONObject): Any {
 
 //        if(event == "getSource"){
@@ -67,6 +70,12 @@ class CallHandler(val acs: AccessibilityService) {
                 return launchApp(appName);
             }
 
+            in "stopApp" -> {
+                var appName = payload.optString("appName");
+                return stopApp(appName);
+            }
+
+
             in "getAppList" -> {
                 return getAppList();
             }
@@ -91,9 +100,12 @@ class CallHandler(val acs: AccessibilityService) {
         if(action.equals("home")){
             return atm.home();
         }
+
         if(action.equals("back")){
-            return (atm.back());
+            Log.d("stdout", "doGlobalAction back");
+            return atm.back();
         }
+
         return false;
     }
 
@@ -288,10 +300,15 @@ class CallHandler(val acs: AccessibilityService) {
         return launchPackage(pkg)
     }
 
+    fun stopApp(appName: String): Boolean {
+        val pkg = getPackageName(appName) ?: return false;
+        val am = AppRuntime.context?.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        am.killBackgroundProcesses(pkg);
+        return true;
+    }
 
     companion object {
-
-        val methods = arrayListOf<String>("doActionToElement", "click", "findElement", "home", "launchPackage", "getSource", "getAppList", "doGlobalAction");
+        val methods = arrayListOf<String>("stopApp", "doActionToElement", "click", "findElement", "home", "launchPackage", "getSource", "getAppList", "doGlobalAction");
     }
 
 }
