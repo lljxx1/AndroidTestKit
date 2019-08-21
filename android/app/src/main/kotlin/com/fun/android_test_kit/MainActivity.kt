@@ -25,6 +25,7 @@ import android.R.attr.rotation
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.util.DisplayMetrics
+import android.util.LruCache
 import org.xmlpull.v1.XmlSerializer
 import java.io.IOException
 import java.io.StringWriter;
@@ -311,6 +312,7 @@ class MainActivity: FlutterActivity() {
 
         val knowElements:WeakHashMap<String, AccessibilityNodeInfo> = WeakHashMap();
         var channel:MethodChannel ?= null;
+        var cacheElements: LruCache<String, AccessibilityNodeInfo> = LruCache(300);
 //        val knowElements:HashMap<String, AndroidElement> = HashMap();
 
         fun accessibilityNodeToJson(it: AccessibilityNodeInfo): JSONObject {
@@ -335,8 +337,22 @@ class MainActivity: FlutterActivity() {
                 element.put("resource-id", it.viewIdResourceName);
             }
 
-
             return element;
+        }
+
+
+        fun collectNodeToCache(node: AccessibilityNodeInfo){
+            val eid = node.hashCode().toString();
+            if(node.isScrollable || node.isClickable || node.isLongClickable || node.isCheckable || node.isEditable ||  node.isFocusable || node.isDismissable){
+                if(MainActivity.cacheElements.get(eid) == null){
+                    MainActivity.cacheElements.put(eid, node);
+                }
+            }
+        }
+
+
+        fun getNodeFromCache(eid: String): AccessibilityNodeInfo {
+            return MainActivity.cacheElements.get(eid);
         }
     }
 }

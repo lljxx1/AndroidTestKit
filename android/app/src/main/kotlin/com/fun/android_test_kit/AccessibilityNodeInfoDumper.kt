@@ -97,15 +97,30 @@ object AccessibilityNodeInfoDumper {
         serializer.attribute("", "bounds", AccessibilityNodeInfoHelper.getVisibleBoundsInScreen(
                 node, width, height).toShortString())
 
+        if(node.actionList.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)){
+            serializer.attribute("", "scroll-forward", java.lang.Boolean.toString(true))
+        }
+
+        if(node.actionList.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)){
+            serializer.attribute("", "scroll-backward", java.lang.Boolean.toString(true))
+        }
 
         val eid = node.hashCode().toString();
         serializer.attribute("", "element-id", eid);
 
-        if(!MainActivity.knowElements.containsKey(node.hashCode().toString())){
-            MainActivity.knowElements.put(node.hashCode().toString(), node);
-        }else{
-            Log.d("MainActivityDump", "hit");
-        }
+
+        MainActivity.collectNodeToCache(node);
+//        if(node.isScrollable || node.isClickable || node.isLongClickable || node.isCheckable || node.isEditable ||  node.isFocusable || node.isDismissable){
+//            if(MainActivity.cacheElements.get(eid) == null){
+//                MainActivity.cacheElements.put(eid, node);
+//            }
+//        }
+
+//        if(!MainActivity.knowElements.containsKey(node.hashCode().toString())){
+//            MainActivity.knowElements.put(node.hashCode().toString(), node);
+//        }else{
+//            Log.d("MainActivityDump", "hit");
+//        }
 
         if(!skipNext) {
             val count = node.childCount

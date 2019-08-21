@@ -16,6 +16,9 @@ import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import org.liquidplayer.javascript.JSContext
+import org.liquidplayer.javascript.JSFunction
+import org.liquidplayer.node.Process
 import java.net.URI
 
 
@@ -112,12 +115,15 @@ class MyAccessibilityService: AccessibilityService() {
                     var acs = instance;
                     if(acs != null){
                         Log.d("MyAccessibilityService", "startScript uri="+uri);
+                        MainActivity.channel?.invokeMethod("onMicroServiceStatus", "startScript uri="+uri);
                         microService = MicroService(instance, URI.create(uri), object : MicroService.ServiceStartListener {
                             override fun onStart(service: MicroService) {
 
                                 if (Looper.myLooper() == null){
                                     Looper.prepare();
                                 }
+
+                                MainActivity.channel?.invokeMethod("onMicroServiceStatus", "started");
 
                                 val methods = CallHandler.methods;
                                 val callHandler = CallHandler(acs);
@@ -129,6 +135,8 @@ class MyAccessibilityService: AccessibilityService() {
                                                 Looper.prepare();
                                             }
 
+                                            // MainActivity.channel?.invokeMethod("onMicroServiceStatus", event+" called");
+
                                             try{
                                                 val callResult = callHandler.handleNativeCall(service, event, payload);
                                                 var result = JSONObject();
@@ -136,19 +144,59 @@ class MyAccessibilityService: AccessibilityService() {
                                                 result.put("result", callResult);
                                                 service.emit("actionResponse", result);
                                             }catch (e:Exception){
-
-
+                                                MainActivity.channel?.invokeMethod("onMicroServiceStatus", e.message);
                                             }
                                         }
                                     })
-
                                 }
-
-
+                            }
+                        }, object: MicroService.ServiceErrorListener {
+                            override fun onError(service: MicroService?, e: java.lang.Exception?) {
+                                MainActivity.channel?.invokeMethod("onMicroServiceStatus", "script error="+e?.message);
+                            }
+                        }, object: MicroService.ServiceExitListener {
+                            override fun onExit(service: MicroService?, exitCode: Int?) {
+                                MainActivity.channel?.invokeMethod("onMicroServiceStatus", "script exit code="+exitCode);
                             }
                         });
 
                         microService?.start();
+                        microService?.process?.addEventListener(object: Process.EventListener {
+                            override fun onProcessStart(process: Process?, ctx: JSContext?) {
+                                Log.d("MyAccessibilityService", "hook stdout");
+
+                                // intercept stdout and stderr
+                                val stdout = ctx?.property("process")?.toObject()?.property("stdout")?.toObject()
+                                stdout?.property("write", object : JSFunction(stdout.getContext(), "write") {
+                                    fun write(string: String) {
+                                        MainActivity.channel?.invokeMethod("onMicroServiceStatus", string);
+                                    }
+                                })
+
+                                val stderr = ctx?.property("process")?.toObject()?.property("stderr")?.toObject()
+                                stderr?.property("write", object : JSFunction(stderr.getContext(), "write") {
+                                    fun write(string: String) {
+                                        MainActivity.channel?.invokeMethod("onMicroServiceStatus", string);
+                                    }
+                                })
+
+                            }
+
+                            override fun onProcessAboutToExit(process: Process?, exitCode: Int) {
+                                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                            }
+
+                            override fun onProcessExit(process: Process?, exitCode: Int) {
+                                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                            }
+
+                            override fun onProcessFailed(process: Process?, error: java.lang.Exception?) {
+                                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+                            }
+                        })
+
+                    }else{
+                        MainActivity.channel?.invokeMethod("onMicroServiceStatus", "AccessibilityService is not started");
                     }
                 }
             };

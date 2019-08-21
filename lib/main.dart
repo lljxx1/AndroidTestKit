@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_liquidcore/liquidcore.dart';
 import 'DriverBridge.dart';
+import 'Bus.dart';
 import 'ScriptEngine.dart';
 
 void main() => runApp(MyApp());
@@ -45,6 +46,8 @@ class _MyAppState extends State<MyHomePage> {
   bool serviceIsEnable = false;
   Driver dr = new Driver();
   bool isRecord = false;
+  List<String> logs = ["test"];
+
 
   TextEditingController urlC = TextEditingController(text:  "http://192.168.1.6:8080/dist/main.js");
 
@@ -54,6 +57,16 @@ class _MyAppState extends State<MyHomePage> {
   void initState() {
     super.initState();
     checkIsEnable();
+    Bus.log.on().listen((data){
+      if(logs.length > 50){
+        logs.remove(0);
+      }
+      logs.add(data['log']);
+      setState(() {
+
+      });
+      print(data);
+    });
   }
 
   checkIsEnable() async {
@@ -92,16 +105,30 @@ class _MyAppState extends State<MyHomePage> {
     print(isenable);
   }
 
+  Widget getTextWidgets(List<String> strings)
+  {
+    List<Widget> list = new List<Widget>();
+    for(var i = 0; i < strings.length; i++){
+      list.add(new Text(strings[i]));
+    }
+    return new Row(children: list);
+  }
+
   @override
   Widget build(BuildContext context) {
 
     List<Widget> childs = [];
     List<Map> data = [];
 
+    data.add({
+      'name': "file",
+      'url':  'http://file.adbug.cn/dist/main.js'
+    });
+
 
     data.add({
-      'name': "file-adbug",
-      'url':  'http://file.adbug.cn/dist/main.js'
+      'name': "file-debug",
+      'url':  'http://file.adbug.cn/dist/debug.js'
     });
 
 
@@ -168,8 +195,25 @@ class _MyAppState extends State<MyHomePage> {
             )
           ],
         ),
-        body: ListView(
-          children: childs
+        body: Stack(
+          children: <Widget>[
+            ListView(
+                children: childs
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Container(
+                height: 300,
+                padding: EdgeInsets.only(left: 10),
+                child: ListView(
+                  shrinkWrap: true,
+                   children: <Widget>[
+                    for(var item in logs ) Text(item)
+                  ],
+                ),
+              ),
+            )
+          ],
         ),
       ),
     );
@@ -188,9 +232,17 @@ class _MyAppState extends State<MyHomePage> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   void initMicroService(url) async {
-
       platform.invokeMethod("startService", {
         "url": url
+      });
+      platform.setMethodCallHandler((MethodCall call) {
+        print(call.method);
+        if(call.method.contains("onMicroServiceStatus")){
+          print("emit log");
+          Bus.log.fire({
+            'log': call.arguments
+          });
+        }
       });
 
       return;

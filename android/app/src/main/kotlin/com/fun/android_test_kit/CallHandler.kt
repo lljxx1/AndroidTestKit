@@ -133,7 +133,8 @@ class CallHandler(val acs: AccessibilityService) {
                 nodes.forEach {
                     AccessibilityNodeInfoDumper.dumpNodeRec(it, serializer, 0, 1080, 1920, true);
                     val id = UUID.randomUUID().toString();
-                    MainActivity.knowElements.put(it.hashCode().toString(), it);
+//                    MainActivity.knowElements.put(it.hashCode().toString(), it);
+                    MainActivity.collectNodeToCache(it);
                     val jsonEL = MainActivity.accessibilityNodeToJson(it);
                     jsonEL.put("elementId", id);
                     data.put(jsonEL);
@@ -156,13 +157,15 @@ class CallHandler(val acs: AccessibilityService) {
 
         Log.d("stdout", "handle doActionToElement ");
 
-        val element = MainActivity.knowElements.get(elementId);
+//        val element = MainActivity.knowElements.get(elementId);
+        val element = MainActivity.getNodeFromCache(elementId);
 
         Log.d("stdout", elementId);
         Log.d("stdout", action);
 
         if(element == null){
             Log.d("MainActivity", "element not found");
+            MainActivity.channel?.invokeMethod("onMicroServiceStatus", elementId+" element not found");
             return false;
         }
 

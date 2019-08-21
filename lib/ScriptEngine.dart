@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_liquidcore/liquidcore.dart';
-
+import 'Bus.dart';
 
 class ScriptEngine {
 
@@ -15,7 +15,18 @@ class ScriptEngine {
     _microService = new MicroService(uri);
     proxy();
     _methodChannel.setMethodCallHandler((MethodCall call) {
-      _microService.emit(call.method, call.arguments);
+      print(call.method);
+      if(call.method.contains("onMicroServiceStatus")){
+        print("emit log");
+        Bus.log.fire({
+          'log': call.arguments
+        });
+//        _microService.emit(call.method, call.arguments);
+
+      }else{
+        _microService.emit(call.method, call.arguments);
+      }
+
     });
   }
 
