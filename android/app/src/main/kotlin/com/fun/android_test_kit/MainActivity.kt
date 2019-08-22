@@ -346,6 +346,9 @@ class MainActivity: FlutterActivity() {
             if(node.isScrollable || node.isClickable || node.isLongClickable || node.isCheckable || node.isEditable ||  node.isFocusable || node.isDismissable){
                 if(MainActivity.cacheElements.get(eid) == null){
                     MainActivity.cacheElements.put(eid, node);
+                }else{
+                    MainActivity.cacheElements.remove(eid);
+                    MainActivity.cacheElements.put(eid, node);
                 }
             }
         }

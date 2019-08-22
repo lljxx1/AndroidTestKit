@@ -58,10 +58,10 @@ class _MyAppState extends State<MyHomePage> {
     super.initState();
     checkIsEnable();
     Bus.log.on().listen((data){
-      if(logs.length > 50){
+      if(logs.length > 5){
         logs.remove(0);
       }
-      logs.add(data['log']);
+//      logs.add(data['log']);
       setState(() {
 
       });
@@ -171,7 +171,6 @@ class _MyAppState extends State<MyHomePage> {
                 setState(() {
                   isRecord = false;
                 });
-
                 platform.invokeMethod("stopRecord");
                 //_engine.microService.emit("stopRecord");
               },
